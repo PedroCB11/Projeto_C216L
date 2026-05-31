@@ -7,6 +7,12 @@ app.secret_key = "secret"
 
 API_URL = "http://backend:8000/api/v1/professores"
 
+
+def aluno_from_api(registro):
+    aluno = dict(registro)
+    aluno["curso"] = aluno.get("curso") or aluno.get("sala_de_atendimento", "")
+    return aluno
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -25,48 +31,52 @@ def cadastro():
         data = {
             "nome": request.form["nome"],
             "email": request.form["email"],
-            "sala_de_atendimento": request.form["sala_de_atendimento"]
+            "sala_de_atendimento": request.form["curso"]
         }
         response = requests.post(API_URL + "/", json=data)
         if response.status_code == 201:
-            flash("Professor cadastrado com sucesso!", "success")
-            return redirect(url_for("professores"))
+            flash("Aluno cadastrado com sucesso!", "success")
+            return redirect(url_for("alunos"))
         else:
-            flash(response.json().get("detail", "Erro ao cadastrar professor."), "danger")
+            flash(response.json().get("detail", "Erro ao cadastrar aluno."), "danger")
     return render_template("cadastro.html")
 
-@app.route("/professores")
-def professores():
+@app.route("/alunos")
+def alunos():
     response = requests.get(API_URL + "/")
-    professores = response.json() if response.ok else []
-    return render_template("professores.html", professores=professores)
+    alunos = [aluno_from_api(item) for item in response.json()] if response.ok else []
+    return render_template("alunos.html", alunos=alunos)
 
-@app.route("/editar/<int:professor_id>", methods=["GET", "POST"])
-def editar(professor_id):
+@app.route("/professores")
+def professores_redirect():
+    return redirect(url_for("alunos"))
+
+@app.route("/editar/<int:aluno_id>", methods=["GET", "POST"])
+def editar(aluno_id):
     if request.method == "POST":
         data = {
             "nome": request.form["nome"],
             "email": request.form["email"],
-            "sala_de_atendimento": request.form["sala_de_atendimento"]
+            "sala_de_atendimento": request.form["curso"]
         }
-        response = requests.patch(f"{API_URL}/{professor_id}", json=data)
+        response = requests.patch(f"{API_URL}/{aluno_id}", json=data)
         if response.ok:
-            flash("Professor atualizado com sucesso!", "success")
+            flash("Aluno atualizado com sucesso!", "success")
         else:
-            flash("Erro ao atualizar professor.", "danger")
-        return redirect(url_for("professores"))
+            flash("Erro ao atualizar aluno.", "danger")
+        return redirect(url_for("alunos"))
     else:
-        prof = requests.get(f"{API_URL}/{professor_id}").json()
-        return render_template("editar.html", professor=prof)
+        aluno = aluno_from_api(requests.get(f"{API_URL}/{aluno_id}").json())
+        return render_template("editar.html", aluno=aluno)
 
-@app.route("/excluir/<int:professor_id>")
-def excluir(professor_id):
-    response = requests.delete(f"{API_URL}/{professor_id}")
+@app.route("/excluir/<int:aluno_id>")
+def excluir(aluno_id):
+    response = requests.delete(f"{API_URL}/{aluno_id}")
     if response.ok:
-        flash("Professor removido com sucesso!", "success")
+        flash("Aluno removido com sucesso!", "success")
     else:
-        flash("Erro ao remover professor.", "danger")
-    return redirect(url_for("professores"))
+        flash("Erro ao remover aluno.", "danger")
+    return redirect(url_for("alunos"))
 
 @app.route("/reset")
 def reset():

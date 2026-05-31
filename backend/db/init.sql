@@ -8,5 +8,5 @@ CREATE TABLE professores (
 );
 
 INSERT INTO professores (nome, email, sala_de_atendimento) VALUES 
-('Professor 1', 'professor_1@example.com', 'Sala 101'),
-('Professor 2', 'professor_2@example.com', 'Sala 102');
+('Aluno 1', 'aluno_1@example.com', 'Curso 1'),
+('Aluno 2', 'aluno_2@example.com', 'Curso 2');
